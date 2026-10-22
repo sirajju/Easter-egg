@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NIGHTSHIFT</title>
+  <meta name="description" content="Somebody on the night shift never logged out.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Libre+Franklin:wght@400;500;600;700&family=Special+Elite&display=swap">
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <!--
+    ARCHIE: You're reading the source. Good instinct.
+    The answers aren't here, though. They never leave the server.
+    The eggs, on the other hand... some of them are closer than you think.
+  -->
+  <div class="shell">
+    <header class="topbar" id="topbar" hidden>
+      <button class="brand" id="brand" type="button" aria-label="NIGHTSHIFT home">
+        <span class="brand-mark" aria-hidden="true">N</span>
+        <span class="brand-word">NIGHTSHIFT</span>
+      </button>
+      <nav class="tabs" id="tabs" aria-label="Sections">
+        <a href="#cases" data-view="cases">Cases</a>
+        <a href="#board" data-view="board">Leaderboard</a>
+        <a href="#discoveries" data-view="discoveries">Discoveries</a>
+        <a href="#vault" data-view="vault">Vault</a>
+        <a href="#achievements" data-view="achievements">Achievements</a>
+        <a href="#story" data-view="story">Story</a>
+      </nav>
+      <div class="player-chip" id="player-chip">
+        <button class="lamp" id="lamp" type="button" hidden aria-label="Turn on the desk lamp" title="The lights are off.">◐</button>
+        <div class="player-text">
+          <span class="player-name" id="player-name"></span>
+          <span class="player-meta" id="player-meta"></span>
+        </div>
+        <span class="player-score" id="player-score">0</span>
+      </div>
+    </header>
+
+    <main class="main" id="main" tabindex="-1"></main>
+
+    <aside class="wire" id="wire" hidden aria-label="The wire">
+      <div class="wire-head">
+        <span class="wire-dot" aria-hidden="true"></span>
+        <span>The wire</span>
+      </div>
+      <ol class="wire-list" id="wire-list"></ol>
+    </aside>
+
+    <footer class="footer" id="footer" hidden>
+      <span>ARCHIE v0.3 · uptime: longer than anyone remembers</span>
+      <span class="fine-print" id="fine-print">If you can read this, you were looking very carefully. Keep looking.</span>
+      <button type="button" class="link-button" id="sign-out">Leave the building</button>
+    </footer>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /basement
+
+# ARCHIE: please do not go down there. Nobody goes down there.

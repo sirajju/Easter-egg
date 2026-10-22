@@ -1,0 +1,13 @@
+{
+  "name": "nightshift",
+  "version": "1.0.0",
+  "description": "An office-wide Easter egg hunt. Somebody on the night shift never logged out.",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch-path=server server/server.js",
+    "check": "node scripts/check-content.js"
+  }
+}
