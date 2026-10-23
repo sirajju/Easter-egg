@@ -42,6 +42,9 @@ Put it behind HTTPS (any reverse proxy) if it's reachable outside the office.
   Locked cases show a redacted title. Some cases are hidden until they unlock.
 - **Personal cases** are generated per player, so shouting answers across
   the room doesn't help.
+- **Difficulty**: every case is Rookie, Agent, Detective or Fiendish, and
+  the board can be filtered by it. Harder cases unlock from easier ones on
+  the same desk; a few Fiendish cases need answers from several desks.
 - **Hints** cost points. **First blood** gives +50%.
 - **Hidden eggs** are reported under Discoveries. Codes found in the app are
   personal; physical codes are printed and hidden around the office.
@@ -61,6 +64,7 @@ export default [
     title: "The Refund That Refunded Itself",
     teaser: "Shown on the board once unlocked.",
     points: 120,
+    tier: "agent",                    // rookie | agent | detective | fiendish (else from points)
     requires: { solved: ["sup-first-contact"] }, // optional; also count, letters, desks, vault
     hidden: false,                    // true = invisible until unlocked
     window: { from: 19, to: 6 },      // optional, server hours

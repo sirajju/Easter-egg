@@ -17,10 +17,14 @@ const store = {
   },
 };
 
+const TIER_LABELS = { rookie: "Rookie", agent: "Agent", detective: "Detective", fiendish: "Fiendish" };
+const TIER_ORDER = ["rookie", "agent", "detective", "fiendish"];
+
 const state = {
   me: null,
   board: null,
   filter: "all",
+  tier: "all",
   desks: {},
   wireIds: new Set(),
 };
@@ -286,9 +290,27 @@ views.cases = async (main) => {
     )
   );
 
-  const list = data.cases.filter((c) => state.filter === "all" || c.desk === state.filter);
+  const tierFilters = h("div", { class: "filters", role: "group", "aria-label": "Difficulty" },
+    ["all", ...TIER_ORDER].map((id) =>
+      h("button", {
+        type: "button",
+        class: `chip${id === "all" ? "" : ` tier-chip tier-${id}`}`,
+        "aria-pressed": String(state.tier === id),
+        onclick: () => { state.tier = id; views.cases(main); },
+      }, id === "all" ? "Any difficulty" : TIER_LABELS[id])
+    )
+  );
+
+  const list = data.cases.filter(
+    (c) => (state.filter === "all" || c.desk === state.filter) && (state.tier === "all" || c.tier === state.tier)
+  );
   const order = { open: 0, solved: 1, locked: 2 };
-  list.sort((a, b) => order[a.status] - order[b.status]);
+  list.sort(
+    (a, b) =>
+      order[a.status] - order[b.status] ||
+      TIER_ORDER.indexOf(a.tier) - TIER_ORDER.indexOf(b.tier) ||
+      a.points - b.points
+  );
   const open = data.cases.filter((c) => c.status === "open").length;
   const solved = data.cases.filter((c) => c.status === "solved").length;
 
@@ -299,11 +321,20 @@ views.cases = async (main) => {
         h("h1", {}, "The case board")),
       letters),
     filters,
+    tierFilters,
     list.length
       ? h("div", { class: "cases" }, list.map(caseCard))
       : h("p", { class: "muted" }, "Nothing filed on this desk yet. ARCHIE is still writing.")
   );
 };
+
+/** Difficulty as a label plus pips: Rookie ●○○○ … Fiendish ●●●●. */
+function tierTag(tier) {
+  const level = TIER_ORDER.indexOf(tier) + 1;
+  return h("span", { class: `tag tier tier-${tier}`, title: `Difficulty: ${TIER_LABELS[tier]}` },
+    TIER_LABELS[tier] || tier,
+    h("span", { class: "pips", "aria-hidden": "true" }, "●".repeat(level) + "○".repeat(4 - level)));
+}
 
 function caseCard(c) {
   const locked = c.status === "locked";
@@ -322,6 +353,7 @@ function caseCard(c) {
     h("span", { class: "case-title" }, c.title),
     h("span", { class: "case-teaser" }, locked ? c.lockedWhy : c.teaser),
     h("span", { class: "tags" },
+      tierTag(c.tier),
       c.personal && h("span", { class: "tag personal" }, "Yours only"),
       c.timed && h("span", { class: "tag timed" }, "Night shift"),
       c.isNew && c.status !== "locked" && h("span", { class: "tag new" }, "Unlocked")),
@@ -396,7 +428,9 @@ views.case = async (main, id) => {
           h("div", { class: "stack", style: "gap:.25rem" },
             h("span", { class: "eyebrow" }, data.solvedBy ? `Closed by ${data.solvedBy} so far` : "Nobody has closed this yet"),
             h("h1", {}, data.title),
-            data.personal && h("span", { class: "tag personal", style: "align-self:flex-start" }, "This case is generated for you")),
+            h("span", { class: "tags" },
+              tierTag(data.tier),
+              data.personal && h("span", { class: "tag personal" }, "This case is generated for you"))),
           data.solved && h("span", { class: "stamp big" }, "CLOSED")),
         h("div", { class: "case-body", html: data.body }),
         data.solved ? null : form,

@@ -161,6 +161,26 @@ ok(!!vaultState.opened, "the vault opens with five shards from different desks")
 const afterVault = await call("/api/board", { token: a.token });
 ok(afterVault.data.cases.some((x) => x.id === "vault-server-room" && x.status === "open"), "the vault unlocks a hidden case for everyone");
 
+console.log("Difficulty ladder");
+const g = await join(`Gil ${run}`, "engineering");
+let gb = (await call("/api/board", { token: g.token })).data;
+ok(gb.cases.every((x) => ["rookie", "agent", "detective", "fiendish"].includes(x.tier)), "every case on the board has a difficulty");
+ok(gb.cases.find((x) => x.id === "eng-xor-diary")?.status === "locked", "a Detective case starts locked");
+ok(!gb.cases.some((x) => x.id === "night-auditor"), "the hidden cross-desk Fiendish case isn't listed yet");
+for (const [id, ans] of [
+  ["eng-first-contact", "echo"],
+  ["eng-stack-trace", "the basement"],
+  ["eng-ghost-commit", "night"],
+  ["eng-xor-diary", "insomnia"],
+]) {
+  r = await answer(g.token, id, ans);
+  ok(r.correct, `${id} closes with its answer`);
+}
+const vig = await call("/api/cases/eng-vigenere", { token: g.token });
+ok(vig.status === 200 && vig.data.tier === "fiendish", "the Fiendish case opens once its chain is closed");
+r = await answer(g.token, "eng-vigenere", "Under the mat");
+ok(r.correct && r.achievements.some((x) => x.id === "fiendish-one"), "closing a Fiendish case earns Devil in the Details");
+
 console.log("Leaderboard and wire");
 const lb = await call("/api/leaderboard");
 ok(lb.data.players.length >= 6 && lb.data.players[0].score >= lb.data.players[1].score, "the leaderboard is ranked by score");

@@ -3,7 +3,8 @@
 // happened:
 //   type ("solve" | "egg" | "shard"), caseId, hints, wrong, seconds, hour,
 //   firstBlood, solvedCount, desks, eggs, letters, firstBloods, shards,
-//   solved (a Set of case ids)
+//   solved (a Set of case ids), tier (of the case just solved),
+//   tiers ({ rookie, agent, detective, fiendish }: cases closed per difficulty)
 // `secret: true` shows "???" until earned.
 
 export default [
@@ -25,5 +26,8 @@ export default [
   { id: "egg-collector", title: "Nothing Escapes You", description: "Find seven hidden eggs.", points: 120, secret: true, test: (f) => f.eggs >= 7 },
   { id: "vault-key", title: "Key Holder", description: "Fit a shard into a vault.", points: 30, test: (f) => f.shards >= 1 },
   { id: "letters", title: "Collector", description: "Collect six letters from ARCHIE.", points: 50, test: (f) => f.letters >= 6 },
+  { id: "detective-grade", title: "Detective Grade", description: "Close three Detective cases.", points: 80, test: (f) => f.tiers.detective >= 3 },
+  { id: "fiendish-one", title: "Devil in the Details", description: "Close a Fiendish case.", points: 100, test: (f) => f.type === "solve" && f.tier === "fiendish" },
+  { id: "fiendish-five", title: "Night Shift Supervisor", description: "Close five Fiendish cases.", points: 250, secret: true, test: (f) => f.tiers.fiendish >= 5 },
   { id: "archivist", title: "Logged Out", description: "Solve the Archivist's Riddle.", points: 200, secret: true, test: (f) => f.solved.has("meta-archivist") },
 ];

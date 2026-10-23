@@ -398,6 +398,7 @@ input:focus { border-color: var(--focus); outline: none; }
 .case-card.locked { cursor: help; background: color-mix(in srgb, var(--folder) 55%, var(--paper)); }
 .case-card.locked .case-title { color: var(--muted); letter-spacing: 0.04em; }
 .case-title { font: 1.1rem var(--font-display); line-height: 1.25; }
+.case-card:has(.stamp) .case-title { padding-right: 5.2rem; }
 .case-teaser { font-size: 0.88rem; color: var(--muted); min-height: 2.6em; }
 .case-meta { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; font-size: 0.78rem; color: var(--muted); }
 .case-points { font: 700 0.9rem var(--font-mono); color: var(--ink); }
@@ -413,6 +414,20 @@ input:focus { border-color: var(--focus); outline: none; }
 .tag.personal { color: var(--carbon); }
 .tag.timed { color: var(--warn); }
 .tag.new { color: var(--stamp); }
+
+/* Difficulty: colour by tier, and pips so it doesn't rely on colour alone. */
+.tag.tier { display: inline-flex; gap: 0.35rem; align-items: center; }
+.tag.tier .pips { letter-spacing: 0.05em; font-size: 0.55rem; }
+.tier-rookie { color: var(--ok); }
+.tier-agent { color: var(--carbon); }
+.tier-detective { color: var(--warn); }
+.tier-fiendish { color: var(--stamp); }
+.chip.tier-chip[aria-pressed="true"] { color: var(--paper); }
+.chip.tier-rookie[aria-pressed="true"] { background: var(--ok); border-color: var(--ok); }
+.chip.tier-agent[aria-pressed="true"] { background: var(--carbon); border-color: var(--carbon); }
+.chip.tier-detective[aria-pressed="true"] { background: var(--warn); border-color: var(--warn); }
+.chip.tier-fiendish[aria-pressed="true"] { background: var(--stamp); border-color: var(--stamp); }
+.case-card:has(.tier-fiendish) { border-color: color-mix(in srgb, var(--stamp) 45%, var(--folder-edge)); }
 
 /* The rubber stamp. */
 .stamp {

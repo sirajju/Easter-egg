@@ -142,7 +142,13 @@ cases, archive the leaderboard, and start a new chapter of the story.
 
 ## 6. Progression and competition
 
-- **Points** per case, set by difficulty.
+- **Difficulty ladder.** Every case is **Rookie**, **Agent**, **Detective**
+  or **Fiendish** (shown as a label with pips, filterable on the board).
+  Each desk is a ladder: its Rookie case opens the Agent ones, those open the
+  Detective ones, and the Fiendish ones sit at the top. A few Fiendish cases
+  cross desks: *The Night Auditor* is spelled by answers from Support, Ops
+  and Engineering, so nobody gets there alone.
+- **Points** per case, scaled by difficulty (60 to 400).
 - **First blood**: the first person to solve a case gets +50%. The wire
   announces it to the whole office.
 - **Hints** cost points from that case's reward (never below 10%).

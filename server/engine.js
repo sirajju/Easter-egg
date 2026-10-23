@@ -19,6 +19,14 @@ const MIN_REWARD_SHARE = 0.1;
 
 const hourNow = () => new Date().getHours();
 
+/** Difficulty tiers, easiest first. A case may set `tier`; otherwise its
+ *  points decide. */
+export const TIERS = ["rookie", "agent", "detective", "fiendish"];
+const tierOf = (c) =>
+  TIERS.includes(c.tier)
+    ? c.tier
+    : c.points <= 100 ? "rookie" : c.points <= 160 ? "agent" : c.points <= 260 ? "detective" : "fiendish";
+
 /** {from: 19, to: 6} wraps midnight; {from: 9, to: 17} doesn't. */
 export const inWindow = (window, hour = hourNow()) => {
   if (!window) return true;
@@ -167,6 +175,7 @@ export function createEngine(db) {
         title: state.open || solved ? c.title : redact(c.title, i),
         teaser: state.open || solved ? c.teaser || "" : "",
         points: c.points,
+        tier: tierOf(c),
         status: solved ? "solved" : state.open ? "open" : "locked",
         lockedWhy: state.open ? null : state.why,
         solvedBy: counts.get(c.id) || 0,
@@ -175,7 +184,7 @@ export function createEngine(db) {
         timed: !!c.window,
       });
     }
-    return { desks: DESKS, cases: entries, letters: stats.letters };
+    return { desks: DESKS, tiers: TIERS, cases: entries, letters: stats.letters };
   }
 
   function openCase(player, id) {
@@ -193,6 +202,7 @@ export function createEngine(db) {
       desk: c.desk,
       title: c.title,
       points: c.points,
+      tier: tierOf(c),
       personal: !!c.personal,
       body: renderBody(c, player),
       hints: c.hints.slice(0, p.hints).map((h) => h.text),
@@ -281,6 +291,7 @@ export function createEngine(db) {
       seconds: (now - p.opened_at) / 1000,
       hour: hourNow(),
       firstBlood,
+      tier: tierOf(c),
     });
     changed();
     return {
@@ -418,6 +429,16 @@ export function createEngine(db) {
       letters: stats.letters.length,
       firstBloods: stats.solves.filter((s) => s.first_blood).length,
       solved: stats.solved,
+      // How many cases of each difficulty this player has closed.
+      tiers: Object.fromEntries(
+        TIERS.map((t) => [
+          t,
+          stats.solves.filter((s) => {
+            const c = content.cases.get(s.case_id);
+            return c && tierOf(c) === t;
+          }).length,
+        ])
+      ),
       shards: content.vaults.filter((v) =>
         stmt.shards.all(v.id).some((s) => s.player_id === player.id)
       ).length,

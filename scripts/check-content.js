@@ -25,8 +25,17 @@ const lore = [...content.cases.values()].map((c) => c.reward?.lore).filter(Boole
 const seen = new Set();
 for (const line of lore) {
   const n = line.match(/^\[(\d+)\//)?.[1];
-  if (n && seen.has(n)) warn(`story line ${n} is used twice`);
+  if (!n) continue; // unnumbered lines are ARCHIE's notes, not the story
+  if (seen.has(n)) warn(`story line ${n} is used twice`);
   seen.add(n);
+}
+
+const tierOf = (c) =>
+  c.tier || (c.points <= 100 ? "rookie" : c.points <= 160 ? "agent" : c.points <= 260 ? "detective" : "fiendish");
+console.log("\nCases per difficulty:");
+for (const t of ["rookie", "agent", "detective", "fiendish"]) {
+  const n = [...content.cases.values()].filter((c) => tierOf(c) === t).length;
+  console.log(`  ${t.padEnd(10)} ${n}`);
 }
 
 console.log("\nCases per desk:");
@@ -35,6 +44,6 @@ for (const [id, name] of Object.entries(DESKS)) {
   console.log(`  ${name.padEnd(12)} ${String(list.length).padStart(2)}  ${list.map((c) => c.id).join(", ")}`);
 }
 console.log(`\nLetter cases: ${letters.map((c) => `${c.id}=${c.reward.letter}`).join(", ")}`);
-console.log(`Story lines: ${lore.length}`);
+console.log(`Story lines: ${seen.size} numbered, ${lore.length - seen.size} ARCHIE notes`);
 console.log(problems ? `\n${problems} problem(s).` : "\nContent looks good.");
 process.exit(problems ? 1 : 0);
