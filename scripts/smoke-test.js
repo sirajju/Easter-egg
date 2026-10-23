@@ -195,6 +195,42 @@ ok(vig.status === 200 && vig.data.tier === "fiendish", "the Fiendish case opens 
 r = await answer(g.token, "eng-vigenere", "Under the mat");
 ok(r.correct && r.achievements.some((x) => x.id === "fiendish-one"), "closing a Fiendish case earns Devil in the Details");
 
+console.log("Realtime");
+{
+  // Listen as one player while another closes a case.
+  const listener = await join(`Hal ${run}`, "ops");
+  const solver = await join(`Ivy ${run}`, "creative");
+  const ctrl = new AbortController();
+  const seen = { case: null, wire: null, scores: null };
+  const res = await fetch(`${BASE}/api/stream?token=${listener.token}`, { signal: ctrl.signal });
+  const reader = res.body.getReader();
+  const done = (async () => {
+    let buf = "";
+    try {
+      for (;;) {
+        const { value, done: end } = await reader.read();
+        if (end) break;
+        buf += new TextDecoder().decode(value);
+        for (const block of buf.split("\n\n").slice(0, -1)) {
+          const type = block.match(/^event: (\w+)/m)?.[1];
+          const data = block.match(/^data: (.*)$/m)?.[1];
+          if (type && data && type in seen && !seen[type]) seen[type] = JSON.parse(data);
+        }
+        buf = buf.slice(buf.lastIndexOf("\n\n") + 2);
+        if (seen.case && seen.wire && seen.scores) break;
+      }
+    } catch { /* aborted */ }
+  })();
+  await new Promise((r) => setTimeout(r, 200));
+  await answer(solver.token, "creative-first-contact", "forest green");
+  await Promise.race([done, new Promise((r) => setTimeout(r, 3000))]);
+  ctrl.abort();
+  ok(seen.case?.id === "creative-first-contact" && seen.case.solvedBy >= 1, "closing a case is pushed to other players live");
+  ok(seen.case && !("title" in seen.case), "the live case event doesn't carry the title");
+  ok(seen.wire && !/Brand Guide/i.test(seen.wire.text), "the wire describes the case without naming it");
+  ok(Array.isArray(seen.scores?.players), "the leaderboard is pushed live");
+}
+
 console.log("Leaderboard and wire");
 const lb = await call("/api/leaderboard");
 ok(lb.data.players.length >= 6 && lb.data.players[0].score >= lb.data.players[1].score, "the leaderboard is ranked by score");

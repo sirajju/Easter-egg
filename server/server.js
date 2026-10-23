@@ -128,6 +128,7 @@ function broadcast(type, data) {
 
 engine.bus.on("event", (event) => broadcast("wire", event));
 engine.bus.on("vault", (id) => broadcast("vault", { id }));
+engine.bus.on("case", (data) => broadcast("case", data));
 let scoresTimer = null;
 engine.bus.on("scores", () => {
   // Coalesce bursts (a solve that also earns achievements) into one push.
@@ -235,6 +236,8 @@ async function api(req, res, url) {
       "Content-Type": "text/event-stream; charset=utf-8",
       "Cache-Control": "no-store",
       Connection: "keep-alive",
+      // Stop reverse proxies (nginx) from buffering the stream.
+      "X-Accel-Buffering": "no",
     });
     res.write("retry: 4000\n\n");
     clients.add(res);

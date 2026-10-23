@@ -89,6 +89,14 @@ function modal(content) {
   return close;
 }
 
+/** Briefly highlight something that just changed live. */
+function flash(el) {
+  if (!el) return;
+  el.classList.remove("live-bump");
+  void el.offsetWidth; // restart the animation
+  el.classList.add("live-bump");
+}
+
 // ---- night shift -----------------------------------------------------------
 
 const isNight = () => { const hr = new Date().getHours(); return hr >= 19 || hr < 6; };
@@ -122,7 +130,9 @@ const timeAgo = (ms) => {
 async function refreshMe() {
   const { ok, data } = await api("/api/me");
   if (!ok) return;
+  const before = state.me?.score;
   state.me = data;
+  if (before !== undefined && data.score !== before) flash($("#player-score"));
   $("#player-name").textContent = data.name;
   $("#player-meta").textContent = `${data.deskName} desk${data.rank ? ` · #${data.rank} of ${data.of}` : ""}`;
   $("#player-score").textContent = data.score;
@@ -342,6 +352,7 @@ function caseCard(c) {
     type: "button",
     class: `case-card${locked ? " locked" : ""}`,
     "data-desk": deskName(c.desk),
+    "data-case": c.id,
     title: locked ? c.lockedWhy : "",
     onclick: () => {
       if (locked) { toast("Locked", c.lockedWhy); return; }
@@ -359,7 +370,7 @@ function caseCard(c) {
       c.isNew && c.status !== "locked" && h("span", { class: "tag new" }, "Unlocked")),
     h("span", { class: "case-meta" },
       h("span", { class: "case-points" }, `${c.points} pts`),
-      h("span", {}, c.solvedBy ? `closed by ${c.solvedBy}` : "nobody yet"))
+      h("span", { class: "case-solved" }, c.solvedBy ? `closed by ${c.solvedBy}` : "nobody yet"))
   );
 }
 
@@ -426,7 +437,7 @@ views.case = async (main, id) => {
       h("div", { class: "stack" },
         h("div", { class: "case-head" },
           h("div", { class: "stack", style: "gap:.25rem" },
-            h("span", { class: "eyebrow" }, data.solvedBy ? `Closed by ${data.solvedBy} so far` : "Nobody has closed this yet"),
+            h("span", { class: "eyebrow", "data-case-eyebrow": data.id }, data.solvedBy ? `Closed by ${data.solvedBy} so far` : "Nobody has closed this yet"),
             h("h1", {}, data.title),
             h("span", { class: "tags" },
               tierTag(data.tier),
@@ -465,6 +476,15 @@ views.board = async (main) => {
 
 function renderBoard(main, data) {
   const myName = state.me?.name;
+  // Compare with the standings this page last showed: who scored, who climbed.
+  const prev = state.prevStandings;
+  state.prevStandings = new Map(data.players.map((p) => [p.name, { rank: p.rank, score: p.score }]));
+  const moveOf = (p) => {
+    const before = prev?.get(p.name);
+    if (!prev) return null;
+    if (!before) return { isNew: true, delta: p.score, climb: 0 };
+    return { delta: p.score - before.score, climb: before.rank - p.rank };
+  };
   const max = Math.max(1, ...data.desks.map((d) => d.average));
   fill(main, 
     h("div", { class: "view-head" }, h("div", { class: "stack", style: "gap:.3rem" },
@@ -478,13 +498,19 @@ function renderBoard(main, data) {
               h("th", {}, "#"), h("th", {}, "Name"), h("th", {}, "Desk"),
               h("th", { class: "num" }, "Cases"), h("th", { class: "num" }, "Eggs"), h("th", { class: "num" }, "Score"))),
             h("tbody", {}, data.players.length
-              ? data.players.map((p) => h("tr", { class: p.name === myName ? "me" : "" },
-                  h("td", {}, h("span", { class: `rank-badge rank-${p.rank}` }, p.rank)),
-                  h("td", {}, p.name, p.firstBloods ? h("span", { class: "muted", title: "First bloods" }, ` ✦${p.firstBloods}`) : ""),
+              ? data.players.map((p) => {
+                  const move = moveOf(p);
+                  const scored = move && move.delta > 0;
+                  return h("tr", { class: [p.name === myName ? "me" : "", scored ? "live-bump" : ""].join(" ").trim() },
+                  h("td", {}, h("span", { class: `rank-badge rank-${p.rank}` }, p.rank),
+                    move?.climb > 0 && h("span", { class: "rank-move", title: `Up ${move.climb}` }, ` ▲${move.climb}`)),
+                  h("td", {}, p.name, p.firstBloods ? h("span", { class: "muted", title: "First bloods" }, ` ✦${p.firstBloods}`) : "",
+                    scored && h("span", { class: "delta" }, `+${move.delta}`)),
                   h("td", { class: "muted" }, deskName(p.desk)),
                   h("td", { class: "num" }, p.solved),
                   h("td", { class: "num" }, p.eggs),
-                  h("td", { class: "num" }, p.score)))
+                  h("td", { class: "num" }, p.score));
+                })
               : h("tr", {}, h("td", { colspan: "6", class: "muted" }, "Nobody yet. Be first."))))
         )),
       h("section", { class: "folder", "data-tab": "Desk war" },
@@ -678,6 +704,24 @@ function connectStream() {
   stream.addEventListener("scores", (e) => {
     refreshMe();
     if ((location.hash.slice(1) || "cases") === "board") renderBoard($("#main"), JSON.parse(e.data));
+  });
+  stream.addEventListener("case", (e) => {
+    const d = JSON.parse(e.data);
+    const sel = (attr) => document.querySelector(`[${attr}="${CSS.escape(d.id)}"]`);
+    const card = sel("data-case");
+    if (card) {
+      const count = card.querySelector(".case-solved");
+      if (count) count.textContent = `closed by ${d.solvedBy}`;
+      flash(card);
+    }
+    const eyebrow = sel("data-case-eyebrow");
+    if (eyebrow) {
+      eyebrow.textContent = `Closed by ${d.solvedBy} so far`;
+      flash(eyebrow);
+    }
+    if (d.firstBlood && d.name !== state.me?.name) {
+      toast("First blood", `${d.name} cracked a ${TIER_LABELS[d.tier] || ""} case on the ${deskName(d.desk)} desk before anyone else.`);
+    }
   });
   stream.addEventListener("board", () => { if ((location.hash.slice(1) || "cases") === "cases") views.cases($("#main")); });
   stream.addEventListener("vault", () => { const v = location.hash.slice(1) || "cases"; if (v === "vault" || v === "cases") render(); });

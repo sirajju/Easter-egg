@@ -676,3 +676,24 @@ input:focus { border-color: var(--focus); outline: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Live updates: a warm flash on whatever just changed. */
+.live-bump { animation: live-bump 1.6s ease; }
+@keyframes live-bump {
+  0% { background-color: color-mix(in srgb, var(--warn) 38%, transparent); }
+  100% { background-color: transparent; }
+}
+tr.live-bump td { animation: live-bump 1.6s ease; }
+.player-score.live-bump { animation: score-pop 0.6s ease; }
+@keyframes score-pop {
+  40% { transform: scale(1.15); color: var(--ok); border-color: var(--ok); }
+}
+.rank-move { color: var(--ok); font: 700 0.75rem var(--font-mono); }
+.delta {
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ok) 18%, transparent);
+  color: var(--ok);
+  font: 700 0.72rem var(--font-mono);
+}

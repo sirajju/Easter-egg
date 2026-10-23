@@ -22,6 +22,7 @@ const hourNow = () => new Date().getHours();
 /** Difficulty tiers, easiest first. A case may set `tier`; otherwise its
  *  points decide. */
 export const TIERS = ["rookie", "agent", "detective", "fiendish"];
+const TIER_NAMES = { rookie: "Rookie", agent: "Agent", detective: "Detective", fiendish: "Fiendish" };
 const tierOf = (c) =>
   TIERS.includes(c.tier)
     ? c.tier
@@ -272,13 +273,25 @@ export function createEngine(db) {
     const before = new Set(board(player).cases.filter((e) => e.status !== "locked").map((e) => e.id));
     stmt.addSolve.run(player.id, id, c.desk, points, firstBlood ? 1 : 0, now);
 
+    // Titles stay off the wire: they'd spoil hidden cases for everyone else.
+    const tier = tierOf(c);
+    const kind = `${TIER_NAMES[tier]} case on the ${DESKS[c.desk]} desk`;
     announce(
       "solve",
       player.id,
       firstBlood
-        ? `${player.name} closed “${c.title}” first. First blood on the ${DESKS[c.desk]} desk.`
-        : `${player.name} closed a case on the ${DESKS[c.desk]} desk.`
+        ? `${player.name} drew first blood on a ${kind}.`
+        : `${player.name} closed a ${kind}.`
     );
+    // Live case closing: just enough for open boards to update the count.
+    bus.emit("case", {
+      id,
+      solvedBy: stmt.solveCount.get(id).n,
+      firstBlood,
+      name: player.name,
+      desk: c.desk,
+      tier,
+    });
 
     const unlocked = board(player)
       .cases.filter((e) => e.status === "open" && !before.has(e.id))
