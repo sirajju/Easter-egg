@@ -34,25 +34,40 @@ Put it behind HTTPS (any reverse proxy) if it's reachable outside the office.
 
 ### With Docker
 
+The image is published as [`sirajju/archie`](https://hub.docker.com/r/sirajju/archie).
+
 ```bash
-docker compose up -d --build        # http://localhost:4404
+docker compose up -d                 # pulls sirajju/archie, serves http://localhost:4404
 ```
 
 - Data (database and server secret) lives in the `nightshift-data` volume
-  and survives rebuilds and restarts.
+  and survives updates and restarts. `docker compose up -d` always pulls the
+  newest image, so that's also how you update.
 - `TZ` decides when the night shift starts. The compose file defaults to
   `Asia/Kolkata`; set `TZ=Europe/London docker compose up -d` for another
   office. The plain image defaults to UTC.
-- `NIGHTSHIFT_PORT` changes the host port, `NIGHTSHIFT_ADMIN_KEY` turns on
-  the organiser API.
+- `NIGHTSHIFT_PORT` changes the host port, `NIGHTSHIFT_TAG` pins an image
+  tag (e.g. a git commit), `NIGHTSHIFT_ADMIN_KEY` turns on the organiser API.
 - To edit cases without rebuilding, uncomment the `./content` mount in
   `docker-compose.yml`; the server reloads content live.
+
+Build from this source instead of pulling:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+```
+
+Publish a new image:
+
+```bash
+docker build -t sirajju/archie:latest -t sirajju/archie:$(git rev-parse --short HEAD) .
+docker push sirajju/archie --all-tags
+```
 
 Without compose:
 
 ```bash
-docker build -t nightshift .
-docker run -d --name nightshift -p 4404:4404 -e TZ=Asia/Kolkata   -v nightshift-data:/data nightshift
+docker run -d --name nightshift -p 4404:4404 -e TZ=Asia/Kolkata   -v nightshift-data:/data sirajju/archie:latest
 ```
 
 Back up with `docker run --rm -v nightshift-data:/data -v "$PWD":/backup alpine

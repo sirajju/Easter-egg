@@ -8,5 +8,5 @@ data
 secret.key
 .env
 Dockerfile
-docker-compose.yml
+docker-compose*.yml
 *.md
