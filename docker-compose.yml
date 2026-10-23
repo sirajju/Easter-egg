@@ -1,0 +1,18 @@
+services:
+  nightshift:
+    build: .
+    image: nightshift:latest
+    container_name: nightshift
+    restart: unless-stopped
+    ports:
+      - "4404:4404"
+    environment:
+      # Turns on the organiser API. Leave empty to keep it off.
+      NIGHTSHIFT_ADMIN_KEY: ${NIGHTSHIFT_ADMIN_KEY:-}
+    volumes:
+      - nightshift-data:/data
+      # Uncomment to edit cases without rebuilding (the server reloads them live):
+      # - ./content:/app/content:ro
+
+volumes:
+  nightshift-data:
