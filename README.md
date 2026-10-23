@@ -59,13 +59,16 @@ Move it onto this compose file without losing data, in a few seconds of
 downtime:
 
 ```bash
-bash scripts/migrate-to-compose.sh
+curl -fsSL https://raw.githubusercontent.com/sirajju/Easter-egg/main/scripts/migrate-to-compose.sh -o migrate-to-compose.sh
+bash migrate-to-compose.sh
 ```
 
-It backs up the database and secret while the game runs, reuses the
-container's existing volume, keeps the old container (stopped) for rollback,
-and puts it back automatically if the new one doesn't come up with every
-player.
+It's self-contained and works from any folder. It backs up the database and
+secret while the game runs, sets the game up in `~/nightshift` (its own
+compose project, reusing the container's existing volume), keeps the old
+container (stopped) for rollback, and puts it back automatically if the new
+one doesn't come up with every player. It never touches other compose
+projects on the server.
 
 Build from this source instead of pulling:
 
