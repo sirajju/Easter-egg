@@ -2,10 +2,24 @@
 //   NIGHTSHIFT_URL=http://localhost:4404 node scripts/smoke-test.js
 // Creates throwaway players, so point it at a test data folder, not the real game.
 
-const BASE = process.env.NIGHTSHIFT_URL || "http://localhost:4404";
+const BASE = process.env.NIGHTSHIFT_URL;
+if (!BASE) {
+  console.error("Set NIGHTSHIFT_URL to a test server, e.g. http://localhost:4405");
+  process.exit(2);
+}
 const ADMIN = process.env.NIGHTSHIFT_ADMIN_KEY || "";
 const run = Date.now().toString(36).slice(-5);
 let failures = 0;
+
+// Never pollute a real game: refuse a server that already has players.
+const existing = await fetch(`${BASE}/api/desks`).then((r) => r.json()).catch(() => null);
+if (existing?.players > 0 && process.env.SMOKE_ALLOW_EXISTING !== "1") {
+  console.error(
+    `${BASE} already has ${existing.players} player(s). This test creates throwaway players, so run it ` +
+      "against an empty test server (fresh NIGHTSHIFT_DATA), or set SMOKE_ALLOW_EXISTING=1."
+  );
+  process.exit(2);
+}
 
 const ok = (cond, label) => {
   console.log(`${cond ? "  ✔" : "  ✘"} ${label}`);

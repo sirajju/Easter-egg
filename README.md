@@ -32,6 +32,32 @@ in `data/nightshift.db` (SQLite); back it up by copying the `data/` folder.
 
 Put it behind HTTPS (any reverse proxy) if it's reachable outside the office.
 
+### With Docker
+
+```bash
+docker compose up -d --build        # http://localhost:4404
+```
+
+- Data (database and server secret) lives in the `nightshift-data` volume
+  and survives rebuilds and restarts.
+- `TZ` decides when the night shift starts. The compose file defaults to
+  `Asia/Kolkata`; set `TZ=Europe/London docker compose up -d` for another
+  office. The plain image defaults to UTC.
+- `NIGHTSHIFT_PORT` changes the host port, `NIGHTSHIFT_ADMIN_KEY` turns on
+  the organiser API.
+- To edit cases without rebuilding, uncomment the `./content` mount in
+  `docker-compose.yml`; the server reloads content live.
+
+Without compose:
+
+```bash
+docker build -t nightshift .
+docker run -d --name nightshift -p 4404:4404 -e TZ=Asia/Kolkata   -v nightshift-data:/data nightshift
+```
+
+Back up with `docker run --rm -v nightshift-data:/data -v "$PWD":/backup alpine
+tar czf /backup/nightshift-data.tgz -C /data .`
+
 ## How it plays
 
 - **Desks**: Engineering, Support, QA, Ops, Creative and the Common Room
@@ -119,4 +145,5 @@ NIGHTSHIFT_DATA=/tmp/ns-test PORT=4405 NIGHTSHIFT_ADMIN_KEY=test npm start
 NIGHTSHIFT_URL=http://localhost:4405 NIGHTSHIFT_ADMIN_KEY=test node scripts/smoke-test.js
 ```
 
-The smoke test creates throwaway players, so point it at a test data folder.
+The smoke test creates throwaway players, so it refuses to run against a
+server that already has players. Point it at a fresh test data folder.

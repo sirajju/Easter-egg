@@ -5,8 +5,10 @@ services:
     container_name: nightshift
     restart: unless-stopped
     ports:
-      - "4404:4404"
+      - "${NIGHTSHIFT_PORT:-4404}:4404"
     environment:
+      # Office time zone: night-shift cases and eggs open 19:00-06:00 local time.
+      TZ: ${TZ:-Asia/Kolkata}
       # Turns on the organiser API. Leave empty to keep it off.
       NIGHTSHIFT_ADMIN_KEY: ${NIGHTSHIFT_ADMIN_KEY:-}
     volumes:
