@@ -54,6 +54,19 @@ docker compose up -d                 # pulls sirajju/archie, serves http://local
 - To edit cases without rebuilding, uncomment the `./content` mount in
   `docker-compose.yml`; the server reloads content live.
 
+**Already running the game with `docker run` or an older compose file?**
+Move it onto this compose file without losing data, in a few seconds of
+downtime:
+
+```bash
+bash scripts/migrate-to-compose.sh
+```
+
+It backs up the database and secret while the game runs, reuses the
+container's existing volume, keeps the old container (stopped) for rollback,
+and puts it back automatically if the new one doesn't come up with every
+player.
+
 Build from this source instead of pulling:
 
 ```bash

@@ -333,6 +333,18 @@ const server = createServer(async (req, res) => {
   }
 });
 
+function shutdown(signal) {
+  console.log(`${signal} received, closing...`);
+  for (const res of clients) res.end();
+  server.close(() => {
+    db.close();
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(0), 3000).unref();
+}
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
 server.listen(PORT, () => {
   console.log(`NIGHTSHIFT is running on http://localhost:${PORT}`);
   if (!ADMIN_KEY) console.log("Organiser tools are off (set NIGHTSHIFT_ADMIN_KEY to enable).");
