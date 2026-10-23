@@ -29,6 +29,7 @@ in `data/nightshift.db` (SQLite); back it up by copying the `data/` folder.
 | `NIGHTSHIFT_DATA` | `./data` | Where the database and server secret live |
 | `NIGHTSHIFT_SECRET` | generated into `data/secret.key` | Secret that per-player codes are derived from |
 | `NIGHTSHIFT_ADMIN_KEY` | off | Turns on the organiser API |
+| `NIGHTSHIFT_JOIN_LIMIT` | `60` | New players per IP per 10 minutes (raise it if the whole office shares one IP) |
 
 Put it behind HTTPS (any reverse proxy) if it's reachable outside the office.
 
@@ -40,8 +41,10 @@ The image is published as [`sirajju/archie`](https://hub.docker.com/r/sirajju/ar
 docker compose up -d                 # pulls sirajju/archie, serves http://localhost:4404
 ```
 
-- Data (database and server secret) lives in the `nightshift-data` volume
-  and survives updates and restarts. `docker compose up -d` always pulls the
+- Data (database and server secret) lives in the `nightshift-data` volume.
+  It survives restarts, reboots, image updates and `docker compose down`;
+  only `docker compose down -v` or `docker volume rm nightshift-data`
+  deletes it, so never run those on the live server. `docker compose up -d` always pulls the
   newest image, so that's also how you update.
 - `TZ` decides when the night shift starts. The compose file defaults to
   `Asia/Kolkata`; set `TZ=Europe/London docker compose up -d` for another

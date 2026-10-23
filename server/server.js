@@ -22,6 +22,9 @@ const CONTENT = join(ROOT, "content");
 const DATA = process.env.NIGHTSHIFT_DATA || join(ROOT, "data");
 const PORT = Number(process.env.PORT) || 4404;
 const ADMIN_KEY = process.env.NIGHTSHIFT_ADMIN_KEY || "";
+// New case files per IP per 10 minutes. Behind a proxy or office NAT everyone
+// can share one address, so keep this comfortably above the head count.
+const JOIN_LIMIT = Math.max(1, Number(process.env.NIGHTSHIFT_JOIN_LIMIT) || 60);
 
 loadSecret(join(DATA, "secret.key"));
 const db = openDb(join(DATA, "nightshift.db"));
@@ -150,7 +153,7 @@ async function api(req, res, url) {
   }
 
   if (path === "/api/join" && method === "POST") {
-    if (limited(`join:${ipOf(req)}`, 10, 10 * 60 * 1000))
+    if (limited(`join:${ipOf(req)}`, JOIN_LIMIT, 10 * 60 * 1000))
       return send(res, 429, { error: "Too many new case files from here. Wait a few minutes." });
     const { name: rawName, desk } = await readJson(req);
     const name = String(rawName || "").trim().replace(/\s+/g, " ");

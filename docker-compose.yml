@@ -21,3 +21,4 @@ services:
 
 volumes:
   nightshift-data:
+    name: ${NIGHTSHIFT_VOLUME:-nightshift-data}
